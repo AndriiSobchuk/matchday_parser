@@ -7,15 +7,25 @@ import sqlite3
 match_day = datetime.now()
 match_day = match_day.strftime("%Y-%m-%d")
 
-### Standings parsing
+### Matchday parsing (for https://fbref.com/*)
 
 class MatchdayParser:
 
     def __init__(self, url):
-        self.url = url
-        self.url = requests.get(url)
-        self.url = BeautifulSoup(self.url.text, "html.parser")
-        self.url = self.url.find('table')
+        def __init__(self, url):
+            self.url = url
+            try:
+                self.url = requests.get(url, timeout=5)
+                self.url = BeautifulSoup(self.url.text, "html.parser")
+                self.url = self.url.find('table')
+            except requests.exceptions.HTTPError as errHTTP:
+                print("Http Error: ", errHTTP)
+            except requests.exceptions.ConnectionError as errConnection:
+                print("Error Connecting: ", errConnection)
+            except requests.exceptions.Timeout as errTimeout:
+                print("Timeout Error: ", errTimeout)
+            except requests.exceptions.RequestException as err:
+                print("Something went wrong with getting url value, please check: ", err)
 
     # print URL get result
     def get_url(self):
@@ -54,10 +64,15 @@ class MatchdayParser:
                         match = m_day + ' ' + m_date + ' ' + m_time + ' ' + m_home + ' ' + m_score + ' ' + m_away
                         cursor.execute(insert_query, (wk, m_day, m_date, m_time, m_home, m_score, m_away))
                         result_schedule += match + '\n'
+        # verify update result
+        if cursor.lastrowid == 0:
+            print('No updates found')
+        else:
+            print('Schedule updated successfully')
+
         #### CLOSE CONNECTION TO DB ####
         db_connect.commit()
         db_connect.close()
-
 
     # read data from DB
     def get_data_from_db(self, data_value):

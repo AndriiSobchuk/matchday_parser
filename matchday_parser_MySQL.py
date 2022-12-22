@@ -68,7 +68,7 @@ class MatchdayParser:
                         cursor.execute(insert_query, (wk, m_day, m_date, m_time, m_home, m_score, m_away))
                         result_schedule += match + '\n'
         # verify update result
-        if cursor.lastrowid == 0:
+        if cursor.rowcount == 0:
             print('No updates found')
         else:
             print('Schedule updated successfully')

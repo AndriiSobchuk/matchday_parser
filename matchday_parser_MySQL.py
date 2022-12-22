@@ -1,11 +1,12 @@
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
-import sqlite3
+import DB_connector
 
 ### Getting current date
 match_day = datetime.now()
 match_day = match_day.strftime("%Y-%m-%d")
+
 
 ### Matchday parsing (for https://fbref.com/*)
 
@@ -17,7 +18,6 @@ class MatchdayParser:
             self.url = requests.get(url, timeout=5)
             self.url = BeautifulSoup(self.url.text, "html.parser")
             self.url = self.url.find('table')
-            #self.url.raise_for_status()
         except requests.exceptions.HTTPError as errHTTP:
             print("Http Error: ", errHTTP)
         except requests.exceptions.ConnectionError as errConnection:
@@ -34,10 +34,13 @@ class MatchdayParser:
     # write data to DB from URL
     def get_schedule(self):
         #### DB CONNECTION ####
-        db_connect = sqlite3.connect('prog66.db')
+        db_connect = DB_connector.db_connect
         cursor = db_connect.cursor()
-        cursor.execute('CREATE TABLE IF NOT EXISTS matchday(wk text, m_day text, m_date text, m_time text, m_home text, m_score text, m_away text, unique (m_date, m_home));')
-        insert_query = 'INSERT OR IGNORE INTO matchday VALUES (?, ?, ?, ?, ?, ?, ?);'    #prevent adding duplicates
+        cursor.execute("USE DB")
+
+        cursor.execute(
+            'CREATE TABLE IF NOT EXISTS matchday(wk text, m_day text, m_date text, m_time text, m_home text, m_score text, m_away text, unique (m_date (20), m_home (40)));')
+        insert_query = 'INSERT IGNORE INTO matchday VALUES (%s, %s, %s, %s, %s, %s, %s);'  # prevent adding duplicates
 
         ### INSERT INTO DB MATCHDAY DATA ###
         result_schedule = '\n'
@@ -76,13 +79,13 @@ class MatchdayParser:
 
     # read data from DB
     def get_data_from_db(self, data_value):
-        conn_db = sqlite3.connect('prog66.db')
-        cursor = conn_db.cursor()
-        #qwe = "SELECT wk, m_day, m_time, m_home, m_score, m_away FROM matchday WHERE m_date =(?)"
-        select_query = "SELECT wk, m_day, m_time, m_home, m_score, m_away FROM matchday WHERE m_date =(?)"
-        cursor.execute(select_query, [data_value])
-        for i in cursor.fetchall():
-            print(*i)
-        conn_db.commit()
-        conn_db.close()
-
+        db_connect = DB_connector.db_connect
+        db_connect.reconnect()
+        cursor = db_connect.cursor()
+        cursor.execute("USE DB")
+        select_query = "SELECT wk, m_day, m_time, m_home, m_score, m_away FROM matchday WHERE m_date = %s"
+        cursor.execute(select_query, (data_value,))
+        for query_row in cursor.fetchall():
+            print(*query_row)
+        db_connect.commit()
+        db_connect.close()

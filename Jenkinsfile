@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        PROJECT_ID = 'My First Project'
+        PROJECT_ID = 'our-axon-367118'
         CLUSTER_NAME = 'cluster-1'
         LOCATION = 'us-west1'
         CREDENTIALS_ID = 'My First Project'

@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: matchday-parser-deploy
+  labels:
+    apps: matchday-parser
+spec:
+  selector:
+    matchLabels:
+      project: matchday
+  template:
+    metadata:
+      labels:
+        project: matchday
+    spec:
+      containers:
+        - name: matchday-parser
+          image: andriisobchuk/test-deploy:18

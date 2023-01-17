@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: matchday-parser-deploy
+  name: matchday-parser-deploy-2
   labels:
     apps: matchday-parser
 spec:
